@@ -1,0 +1,121 @@
+.musicPlayWrap {
+	position: absolute;
+	top: 0.6rem;
+	right: 0.6rem;
+	z-index: 200;
+	width: 1rem;
+	height: 1rem;
+	background-image: url(../resources/music.svg);
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+.pageProgress {
+	position: absolute;
+	width: 100%;
+	height: 0.1rem;
+	bottom: 0rem;
+	background: none;
+}
+
+.pageProgress .layui-progress-bar {
+	height: 0.1rem;
+	border-radius: 0rem;
+	background-color: rgb(221, 186, 134);
+}
+
+.pre-wrap-bottom {
+	position: absolute;
+	bottom: 0.6rem;
+	left: calc(50% - 11px);
+	z-index: 150;
+	width: 22px;
+	height: 14px;
+	-webkit-animation: start 1.5s infinite ease-in-out;
+    animation: start 1.5s infinite ease-in-out;
+}
+
+.pre-wrap-bottom .pre-box1, .pre-wrap-bottom .pre-box2 {
+	height: 15px;
+	width: 14px;
+	position: absolute;
+	overflow: hidden;
+}
+
+.pre-wrap-bottom .pre-box2 {
+	left: 8px;
+}
+
+.pre-wrap-bottom .pre-box1 .pre1, .pre-wrap-bottom .pre-box2 .pre2 {
+	background-color: #fff;
+    width: 14px;
+    height: 5px;
+    border-radius: 2px;
+    position: absolute;
+    box-shadow: 1px -1px 1px #646464;
+    top: 5px;
+}
+
+.pre-wrap-bottom .pre-box1 .pre1 {
+	transform: rotate(130deg);
+    -webkit-transform: rotate(130deg);
+    left: 1px;
+}
+
+.pre-wrap-bottom .pre-box2 .pre2 {
+    -webkit-transform: rotate(50deg);
+    transform: rotate(50deg);
+}
+
+.pageItemWrap {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.pageItemWrap li.pageItem {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0px;
+	left: 0px;
+	background-size: cover;
+	background-position: 50% 50%;
+	background-origin: content-box;
+}
+
+.pageItemWrap li.pageItem1 {
+	background-image: url('../resources/bg_1.png');
+}
+
+.pageItemWrap li.pageItem2 {
+	background-image: url('../resources/bg_2.png');
+}
+
+.pageItemWrap li.pageItem3 {
+	background-image: url('../resources/bg_3.png');
+}
+
+.pageItemWrap li.pageItem4 {
+	background-image: url('../resources/bg_4.png');
+}
+
+.pageItemWrap li.pageItem5 {
+	background-image: url('../resources/bg_5.png');
+}
+
+.pageItemWrap li.pageItem6 {
+	background-image: url('../resources/bg_6.png');
+}
+
+.pageItemWrap li.pageItem7 {
+	background-image: url('../resources/bg_7.jpg');
+}
+
+.pageItemWrap li.pageItem8 {
+	background-image: url('../resources/bg_8.png');
+}
+
+.pageItemWrap li.pageItem9 {
+	background-image: url('../resources/bg_9.jpg');
+}
