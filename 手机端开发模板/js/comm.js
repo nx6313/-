@@ -202,6 +202,7 @@ var fullPullRefWrapHeight = function (mainContentFull) {
         if (!titleBarHeight) {
             titleBarHeight = 0;
         }
+        $('div#pageWrap').css('top', titleBarHeight + 'px');
         $('div#pageWrap').css('height', (screenHeight - titleBarHeight) + 'px');
         $('div#pullRefWrap').css('height', '100%');
         if (mainContentFull) {
@@ -284,7 +285,7 @@ var initLetterSideSlip = function (lspParams) {
     if ($.isPlainObject(lspParams)) {
         $.extend(baseParams, lspParams);
     }
-    let leftLetterHtml = '<div class="letterSlpWrap noselect" style="opacity: ' + baseParams.initAlpha + '; __LETTERSLPWRAPBG__">' +
+    let leftLetterHtml = '<div id="letterSlpWrap" class="letterSlpWrap noselect" style="opacity: ' + baseParams.initAlpha + '; __LETTERSLPWRAPBG__">' +
         '<ul class="flex-col flex-a">__LETTERITEMLI__</ul>' +
         '</div>';
     let letterItemLiHtml = '';
@@ -305,6 +306,16 @@ var initLetterSideSlip = function (lspParams) {
     if ($('.letterSlpWrap').length == 0) {
         $('body').append(leftLetterHtml);
     }
+    // 设置top值及height值
+    let screenHeight = $(window).height();
+    let titleBarHeight = $('div.titleBar').height();
+    let letterSlpWrapTop = 'calc(' + titleBarHeight + 'px + 0.2rem)';
+    if (!titleBarHeight) {
+        titleBarHeight = 0;
+        letterSlpWrapTop = '0.2rem';
+    }
+    let contentAreaHeight = screenHeight - titleBarHeight;
+    $('#letterSlpWrap').css({ top: letterSlpWrapTop, height: 'calc(' + contentAreaHeight + 'px - 0.06rem - 0.06rem - 0.2rem - 0.2rem' + ')' });
     // 初始化字母检索区域值数组
     let letterOffSetTopArr = [];
     let letterLis = $('.letterSlpWrap').find('li');
