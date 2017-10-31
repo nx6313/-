@@ -642,3 +642,198 @@ var initPicker = function (pickerParams) {
         return false;
     };
 };
+
+var canvasObj = function (canvasParams) {
+    let baseParams = {
+        bearElm: null, width: null, height: null, contextType: '2d', noSupportTip: '', cssClass: null,
+        drawFn: function (context) { }
+    };
+    if ($.isPlainObject(canvasParams)) {
+        $.extend(baseParams, canvasParams);
+    }
+    let canvas = null, context = null;
+    if (baseParams.bearElm && $.isNumeric(baseParams.width) && $.isNumeric(baseParams.height)) {
+        canvas = document.createElement('canvas');
+        context = canvas.getContext(baseParams.contextType);
+        canvas.width = baseParams.width;
+        canvas.height = baseParams.height;
+        if (baseParams.cssClass) {
+            canvas.classList.add(baseParams.cssClass);
+        }
+        $(baseParams.bearElm).append(canvas);
+        canvas.innerHTML = baseParams.noSupportTip;
+
+        if (typeof baseParams.drawFn === 'function') {
+            baseParams.drawFn(context);
+        }
+    } else {
+        if (!baseParams.bearElm) {
+            console.error('初始化canvas容器', 'canvas承载Dom容器不能为空');
+        }
+        if (!$.isNumeric(baseParams.width)) {
+            console.error('初始化canvas容器', 'canvas宽度不是一个有效数值');
+        }
+        if (!$.isNumeric(baseParams.height)) {
+            console.error('初始化canvas容器', 'canvas高度不是一个有效数值');
+        }
+    }
+
+    // 坐标点对象定义
+    this.Point = function (x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    // 坐标线对象定义 lineCap: butt、round、square    lineJoin: miter、bevel、round
+    this.Line = function (points, lineWidth, strokeColor, lineCap, lineJoin, fillFlag, fillColor, closePathFlag) {
+        this.lineWidth = lineWidth;
+        this.strokeColor = strokeColor;
+        this.lineCap = lineCap;
+        this.lineJoin = lineJoin;
+        this.fillFlag = fillFlag;
+        this.fillColor = fillColor;
+        this.closePathFlag = closePathFlag;
+        this.linePoints = null;
+        let linePointsArr = [];
+        if ($.isArray(points)) {
+            $.each(points, function (pointIndex, point) {
+                linePointsArr.push(point);
+            });
+            this.linePoints = linePointsArr;
+        }
+    };
+    // 坐标矩形对象定义
+    this.Rect = function (startX, startY, width, height) {
+        this.startX = startX;
+        this.startY = startY;
+        this.width = width;
+        this.height = height;
+    }
+    // 坐标圆对象定义
+    this.Arc = function (centerX, centerY, radius, startAngle, endAngle, anticlockwise) {
+        this.centerX = centerX; // 圆心 X 坐标
+        this.centerY = centerY; // 圆心 Y 坐标
+        this.radius = radius; // 圆半径
+        this.startAngle = startAngle; // 开始角度 0 ~ 2*Math.PI
+        this.endAngle = endAngle; // 结束角度 0 ~ 2*Math.PI
+        this.anticlockwise = anticlockwise; // 是否逆时针
+    };
+
+    /**
+     * 绘制线（可多条绘制）
+     * @param lines ps: [ new cvs.Line([ new cvs.Point(*, *), ... ]), ... ]
+     * @param lineCap 线条末端线帽样式 可选值：butt、round、square
+     * @param lineJoin 两条线交汇时所创建边角类型 可选值：miter、bevel、round
+     */
+    this.drawLine = function (lineParams) {
+        let baseParams = {
+            lines: null, lineWidth: 1, strokeColor: '#72B6B7', closePathFlag: false, fillFlag: false, fillColor: '#CCE9EA',
+            lineCap: 'butt', lineJoin: 'miter'
+        };
+        if ($.isPlainObject(lineParams)) {
+            $.extend(baseParams, lineParams);
+        }
+        if (context) {
+            if ($.isArray(baseParams.lines) && baseParams.lines.length > 0) {
+                $.each(baseParams.lines, function (lineIndex, lineData) {
+                    context.beginPath();
+                    context.lineWidth = baseParams.lineWidth;
+                    context.strokeStyle = baseParams.strokeColor;
+                    context.lineCap = baseParams.lineCap;
+                    context.lineJoin = baseParams.lineJoin;
+                    if (baseParams.fillFlag) {
+                        context.fillStyle = baseParams.fillColor;
+                    }
+                    if (lineData.lineWidth) {
+                        context.lineWidth = lineData.lineWidth;
+                    }
+                    if (lineData.strokeColor) {
+                        context.strokeStyle = lineData.strokeColor;
+                    }
+                    if (lineData.lineCap) {
+                        context.lineCap = lineData.lineCap;
+                    }
+                    if (lineData.lineJoin) {
+                        context.lineJoin = lineData.lineJoin;
+                    }
+                    if (lineData.fillFlag && lineData.fillColor) {
+                        context.fillStyle = lineData.fillColor;
+                    }
+                    let linePoints = lineData.linePoints;
+                    $.each(linePoints, function (pointIndex, point) {
+                        if (pointIndex == 0) {
+                            context.moveTo(point.x, point.y);
+                        }
+                        context.lineTo(point.x, point.y);
+                        if (pointIndex == linePoints.length - 1) {
+                            if ((baseParams.fillFlag) || (lineData.fillFlag && lineData.fillColor)) {
+                                context.fill();
+                            }
+                            if (baseParams.closePathFlag || lineData.closePathFlag) {
+                                context.closePath();
+                            }
+                            context.stroke();
+                        }
+                    });
+                });
+            } else {
+                console.error('canvas 绘制线段', '未指定要绘制的线段数据：请使用 Line(Point...) 对象');
+            }
+        }
+    };
+
+    /**
+     * 绘制矩形（可绘制多个）
+     */
+    this.drawRect = function (rectParams) {
+        let baseParams = {
+            rects: null, lineWidth: 1, strokeColor: '#72B6B7', solidFlag: false, fillFlag: false, fillColor: '#CCE9EA'
+        };
+        if ($.isPlainObject(rectParams)) {
+            $.extend(baseParams, rectParams);
+        }
+        if (context) {
+            if ($.isArray(baseParams.rects) && baseParams.rects.length > 0) {
+                $.each(baseParams.rects, function (rectIndex, rect) {
+                    context.lineWidth = baseParams.lineWidth;
+                    if (baseParams.solidFlag) {
+                        context.fillStyle = baseParams.strokeColor;
+                        context.fillRect(rect.startX, rect.startY, rect.width, rect.height);
+                    } else {
+                        if (baseParams.fillFlag) {
+                            context.fillStyle = baseParams.fillColor;
+                            context.strokeStyle = baseParams.strokeColor;
+                            context.fillRect(rect.startX, rect.startY, rect.width, rect.height);
+                            context.strokeRect(rect.startX, rect.startY, rect.width, rect.height);
+                        } else {
+                            context.strokeStyle = baseParams.strokeColor;
+                            context.strokeRect(rect.startX, rect.startY, rect.width, rect.height);
+                        }
+                    }
+                });
+            } else {
+                console.error('canvas 绘制矩形', '未指定要绘制的矩形数据：请使用 Rect() 对象');
+            }
+        }
+    };
+
+    /**
+     * 绘制文本
+     */
+    this.drawText = function () {
+        if (context) { }
+    };
+
+    /**
+     * 绘制圆
+     */
+    this.drawCircle = function () {
+        if (context) {
+            context.beginPath();
+            context.fillStyle = '#72B6B7';
+            //context.fillRect(0, 0, 1, 1);
+            context.arc(10, 20, 1, 0, Math.PI * 2, true);
+            context.closePath();
+            context.fill();
+        }
+    };
+};
