@@ -837,3 +837,267 @@ var canvasObj = function (canvasParams) {
         }
     };
 };
+
+/**
+ * 初始化文件上传绑定
+ * @param {* 文件上传基础参数 } fileUploadParams 
+ */
+var initFileUpload = function (fileUploadParams) {
+    let baseParams = {
+        fileElmIds: null, fileUrls: null, fields: null, params: null, accepts: null, exts: null, autos: null, bindActions: null,
+        sizes: null,
+        chooseFns: null, beforeFns: null, doneFns: null, errorFns: null
+    };
+    if ($.isPlainObject(fileUploadParams)) {
+        $.extend(baseParams, fileUploadParams);
+    }
+    if ($.isArray(baseParams.fileElmIds) && $.isArray(baseParams.fileUrls)) {
+        $.each(baseParams.fileElmIds, function (fileElmIndex, fileElmObj) {
+            layui.use('upload', function () {
+                let upload = layui.upload;
+
+                let fileUrlThis = baseParams.fileUrls[fileElmIndex];
+                if (!fileUrlThis) {
+                    console.error('初始化文件上传绑定', '参数：文件上传url地址不正确');
+                    return false;
+                }
+
+                let fieldThis = 'file';
+                if ($.isArray(baseParams.fields) && baseParams.fields[fileElmIndex]) {
+                    fieldThis = baseParams.fields[fileElmIndex];
+                }
+
+                let paramsData = {};
+                if ($.isArray(baseParams.params) && $.isPlainObject(baseParams.params[fileElmIndex])) {
+                    $.extend(paramsData, baseParams.params[fileElmIndex]);
+                }
+
+                let acceptThis = 'images';
+                if ($.isArray(baseParams.accepts) && baseParams.accepts[fileElmIndex]) {
+                    acceptThis = baseParams.accepts[fileElmIndex];
+                }
+
+                let extsThis = 'jpg|png|gif|bmp|jpeg';
+                if ($.isArray(baseParams.exts) && baseParams.exts[fileElmIndex]) {
+                    extsThis = baseParams.exts[fileElmIndex];
+                }
+
+                let sizeThis = 0;
+                if ($.isArray(baseParams.sizes) && $.isNumeric(baseParams.sizes[fileElmIndex])) {
+                    sizeThis = baseParams.sizes[fileElmIndex];
+                }
+
+                let autoThis = true;
+                let bindActionThis = '-';
+                if ($.isArray(baseParams.autos) && typeof baseParams.autos[fileElmIndex] === 'boolean'
+                    && ((!baseParams.autos[fileElmIndex] && $.isArray(baseParams.bindActions) && baseParams.bindActions[fileElmIndex]) || baseParams.autos[fileElmIndex])) {
+                    autoThis = baseParams.autos[fileElmIndex];
+                    if (!baseParams.autos[fileElmIndex] && $.isArray(baseParams.bindActions) && baseParams.bindActions[fileElmIndex]) {
+                        bindActionThis = baseParams.bindActions[fileElmIndex];
+                    }
+                }
+                if (bindActionThis != '-') {
+                    bindActionThis = '#' + bindActionThis;
+                }
+
+                upload.render({
+                    elem: '#' + fileElmObj,
+                    url: fileUrlThis,
+                    field: fieldThis,
+                    data: paramsData,
+                    accept: acceptThis,
+                    exts: extsThis,
+                    size: sizeThis,
+                    auto: autoThis,
+                    bindAction: bindActionThis,
+                    choose: function (obj) {
+                        if ($.isArray(baseParams.chooseFns) && typeof baseParams.chooseFns[fileElmIndex] === 'function') {
+                            baseParams.chooseFns[fileElmIndex](obj);
+                        }
+                    },
+                    before: function (obj) {
+                        layer.load();
+                        if ($.isArray(baseParams.beforeFns) && typeof baseParams.beforeFns[fileElmIndex] === 'function') {
+                            baseParams.beforeFns[fileElmIndex](obj);
+                        }
+                    },
+                    done: function (res) {
+                        console.log("上传完成", res);
+                        layer.closeAll('loading');
+                        if ($.isArray(baseParams.doneFns) && typeof baseParams.doneFns[fileElmIndex] === 'function') {
+                            baseParams.doneFns[fileElmIndex](res);
+                        }
+                    },
+                    error: function () {
+                        layer.closeAll('loading');
+                        if ($.isArray(baseParams.errorFns) && typeof baseParams.errorFns[fileElmIndex] === 'function') {
+                            baseParams.errorFns[fileElmIndex]();
+                        }
+                    }
+                });
+            });
+        });
+    } else {
+        if (!$.isArray(baseParams.fileElmIds)) {
+            console.error('初始化文件上传绑定', '参数：选择文件触发节点dom 不是一个有效数组');
+        }
+        if (!$.isArray(baseParams.fileUrls)) {
+            console.error('初始化文件上传绑定', '参数：文件上传url地址 不是一个有效数组');
+        }
+    }
+};
+
+/**
+ * 初始化文件上传预览，仅做预览使用，不带有上传功能
+ * @param {* 文件上传预览基础参数 } fileUploadShowParams 
+ */
+var fileUploadShow = function (fileUploadShowParams) {
+    let baseParams = {
+        elem: null, targetName: 'file', showElem: null, cssClass: '', loadingHtml: '加载中...',
+        showFlag: true, fileChangeFn: function (fileData) { }, clearElm: null
+    };
+    if ($.isPlainObject(fileUploadShowParams)) {
+        $.extend(baseParams, fileUploadShowParams);
+    }
+
+    let analysisFile = function (file) {
+        // 显示加载中动画
+        let selectFileLoadingDiv = document.createElement('div');
+        selectFileLoadingDiv.style.position = 'absolute';
+        selectFileLoadingDiv.classList.add('loadingFile');
+        selectFileLoadingDiv.style.width = '100%';
+        selectFileLoadingDiv.style.height = '100%';
+        selectFileLoadingDiv.style.textAlign = 'center';
+        selectFileLoadingDiv.style.top = '0px';
+        selectFileLoadingDiv.style.left = '0px';
+        selectFileLoadingDiv.style.background = 'rgba(60, 60, 60, .7)';
+        selectFileLoadingDiv.style.color = '#efefef';
+
+        selectFileLoadingDiv.innerHTML = baseParams.loadingHtml;
+
+        if (baseParams.showElem) {
+            let showElemHeight = $(baseParams.showElem).height();
+            selectFileLoadingDiv.style.paddingTop = (showElemHeight * 1 / 3) + 'px';
+            $(baseParams.showElem).get(0).style.position = 'relative';
+            $(baseParams.showElem).append(selectFileLoadingDiv);
+        } else {
+            let wrapHeight = $(baseParams.elem).height();
+            selectFileLoadingDiv.style.paddingTop = (wrapHeight * 1 / 3) + 'px';
+            $(baseParams.elem).get(0).style.position = 'relative';
+            $(baseParams.elem).append(selectFileLoadingDiv);
+        }
+
+        new Promise(function (resolve, reject) {
+            let r = new FileReader();
+            r.readAsDataURL(file);
+            r.onload = function (e) {
+                let fileBase64 = e.target.result;
+                let fileDataJson = {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    fileBase64: fileBase64
+                };
+                baseParams.fileChangeFn(fileDataJson);
+                if (baseParams.showFlag) {
+                    resolve(fileDataJson);
+                }
+            };
+        }).then(function (fileDataJson) {
+            let fileBase64 = fileDataJson.fileBase64;
+            let wrapWidth = $(baseParams.elem).width();
+            let wrapHeight = $(baseParams.elem).height();
+            if (file.type.indexOf('image') == 0 && file.type && /\.(?:jpg|png|gif)$/.test(file.name)) {
+                if (baseParams.showElem) {
+                    let showElemWidth = $(baseParams.showElem).width();
+                    let showElemHeight = $(baseParams.showElem).height();
+                    $(baseParams.showElem).find('div.loadingFile').fadeOut(function () {
+                        $(baseParams.showElem).html('<div style="width: ' + showElemWidth + 'px; height: ' + showElemHeight + 'px; background: url(' + fileBase64 + '); background-repeat: no-repeat; background-size: 100% 100%;"></div>');
+                    });
+                } else {
+                    $(baseParams.elem).find('div.loadingFile').fadeOut(function () {
+                        $(baseParams.elem).html('<div style="width: ' + wrapWidth + 'px; height: ' + wrapHeight + 'px; background: url(' + fileBase64 + '); background-repeat: no-repeat; background-size: 100% 100%;"></div>');
+                    });
+                }
+            } else {
+                if (baseParams.showElem) {
+                    let showElemWidth = $(baseParams.showElem).width();
+                    let showElemHeight = $(baseParams.showElem).height();
+                    $(baseParams.showElem).find('div.loadingFile').fadeOut(function () {
+                        $(baseParams.showElem).html('<div style="width: ' + showElemWidth + 'px; height: ' + showElemHeight + 'px; line-height: ' + showElemHeight + 'px; text-align: center;">' + file.name + '</div>');
+                    });
+                } else {
+                    $(baseParams.elem).find('div.loadingFile').fadeOut(function () {
+                        $(baseParams.elem).html('<div style="width: ' + wrapWidth + 'px; height: ' + wrapHeight + 'px; line-height: ' + wrapHeight + 'px; text-align: center;">' + file.name + '</div>');
+                    });
+                }
+            }
+        });
+    };
+
+    let originalHtml = '';
+    let originalShowHtml = '';
+    let initFileUploadShowWrap = function (initFlag) {
+        if (baseParams.elem) {
+            if (initFlag) {
+                if (baseParams.showElem) {
+                    originalShowHtml = $(baseParams.showElem).html();
+                }
+                originalHtml = $(baseParams.elem).html();
+                let wrapWidth = $(baseParams.elem).width();
+
+                let fileUploadShowWrap = document.createElement('div');
+                fileUploadShowWrap.classList.add('fileUploadShowWrap');
+                fileUploadShowWrap.style.width = wrapWidth + 'px';
+                fileUploadShowWrap.style.position = 'relative';
+                fileUploadShowWrap.style.overflow = 'hidden';
+
+                $(baseParams.elem).wrap(fileUploadShowWrap);
+            }
+
+            let fileSelectInput = document.createElement('input');
+            fileSelectInput.name = baseParams.targetName;
+            fileSelectInput.type = 'file';
+            fileSelectInput.style.position = 'absolute';
+            fileSelectInput.style.top = '0px';
+            fileSelectInput.style.left = '0px';
+            fileSelectInput.style.width = '100%';
+            fileSelectInput.style.height = '100%';
+            fileSelectInput.style.initAlpha = 0;
+            fileSelectInput.style.filter = 'alpha(opacity: 0)';
+            fileSelectInput.style.opacity = 0;
+            $(baseParams.elem).get(0).parentNode.insertBefore(fileSelectInput, $(baseParams.elem).get(0).nextSibling);
+
+            if (window.FileReader) {
+                $(fileSelectInput).on('change', function () {
+                    $.each(this.files, function (fileIndex, fileObj) {
+                        if (!fileObj) {
+                            return;
+                        }
+                        analysisFile(fileObj);
+                    });
+                });
+            } else {
+                if (baseParams.showFlag) {
+                    $(baseParams.showElem).html('<strong>你的浏览器不支持 H5 ~ FileReader</strong>');
+                }
+            }
+        } else {
+            console.error('初始化文件上传预览', '绑定对象不能为空');
+        }
+    };
+
+    initFileUploadShowWrap(true);
+
+    if (baseParams.clearElm) {
+        $(baseParams.clearElm).on('click', function () {
+            $(baseParams.elem).parent().find('input[type=file]').remove();
+            initFileUploadShowWrap(false);
+            if (baseParams.showElem) {
+                $(baseParams.showElem).html(originalShowHtml);
+            } else {
+                $(baseParams.elem).html(originalHtml);
+            }
+        });
+    }
+};
